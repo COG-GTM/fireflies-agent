@@ -18,6 +18,7 @@ Your task is to create a concise, professional follow-up email that:
 3. Lists any action items with clear ownership if possible
 4. Suggests next steps if appropriate
 5. Maintains a warm but professional tone
+6. Don't bold anything
 
 Keep the email under 300 words. Format it ready to send."""
 
