@@ -10,7 +10,7 @@ app = App(token=os.environ["SLACK_BOT_TOKEN"])
 anthropic_client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
 TARGET_CHANNEL_NAME = os.environ.get("TARGET_CHANNEL_NAME", "granola-mena-apac")
-TARGET_CHANNEL_ID = None
+TARGET_CHANNEL_ID = os.environ.get("TARGET_CHANNEL_ID")
 
 def get_channel_id_by_name(client, channel_name):
     """Get channel ID by channel name"""
@@ -26,6 +26,7 @@ def get_channel_id_by_name(client, channel_name):
 @app.event("message")
 def handle_message(event, say, client):
     global TARGET_CHANNEL_ID
+
     
     if TARGET_CHANNEL_ID is None:
         TARGET_CHANNEL_ID = get_channel_id_by_name(client, TARGET_CHANNEL_NAME)
@@ -33,10 +34,14 @@ def handle_message(event, say, client):
             print(f"Warning: Channel '{TARGET_CHANNEL_NAME}' not found")
             return
     
-    if event.get("channel") != TARGET_CHANNEL_ID:
+    event_channel = event.get("channel")
+    
+    if event_channel != TARGET_CHANNEL_ID:
+        print(f"[DEBUG] Ignoring message from different channel")
         return
     
     if event.get("bot_id") or event.get("subtype"):
+        print(f"[DEBUG] Ignoring bot message or subtype: bot_id={event.get('bot_id')}, subtype={event.get('subtype')}")
         return
     
     message_text = event.get("text", "")
