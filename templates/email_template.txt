@@ -1,0 +1,18 @@
+Subject: Follow-up: {title}
+
+Hi Team,
+
+Thank you for taking the time to meet today. Here's a quick summary of our discussion:
+
+Key Points Discussed:
+{summary_points}
+
+Action Items:
+{action_items}
+
+Next Steps:
+{next_steps}
+
+Please let me know if I've missed anything or if you have any questions.
+
+Best regards

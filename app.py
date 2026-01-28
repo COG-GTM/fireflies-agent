@@ -9,6 +9,7 @@ import uvicorn
 from dotenv import load_dotenv
 import asyncio
 from typing import Optional
+from prompts import build_email_prompt
 
 load_dotenv()
 
@@ -116,26 +117,14 @@ def generate_email_draft(transcript_data: dict) -> str:
     sentences = transcript_data.get("sentences") or []
     key_discussion = "\n".join([f"- {s.get('speaker_name', 'Unknown')}: {s.get('text', '')}" for s in sentences[:20]]) if sentences else "No transcript available"
     
-    prompt = f"""You are an executive assistant helping to draft a professional follow-up email after a meeting.
-
-Meeting Details:
-- Title: {title}
-- Attendees: {attendee_names}
-- Overview: {overview}
-- Key Topics: {', '.join(keywords) if keywords else 'N/A'}
-- Action Items: {', '.join(action_items) if action_items else 'None identified'}
-
-Key Discussion Points:
-{key_discussion}
-
-Please draft a professional, concise follow-up email that:
-1. Thanks attendees for their time
-2. Summarizes the key discussion points
-3. Lists any action items with clear ownership if possible
-4. Suggests next steps if appropriate
-5. Maintains a warm but professional tone
-
-Keep the email under 300 words. Format it ready to send."""
+    prompt = build_email_prompt(
+        title=title,
+        attendee_names=attendee_names,
+        overview=overview,
+        keywords=keywords,
+        action_items=action_items,
+        key_discussion=key_discussion
+    )
     
     try:
         message = anthropic_client.messages.create(
