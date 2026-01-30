@@ -46,7 +46,7 @@ def extract_sentences_text(sentences: list[dict]) -> list[str]:
     return result
 
 
-def extract_key_discussion(sentences: list[dict], max_sentences: int = 150) -> str:
+def extract_key_discussion(sentences: list[dict], max_sentences: int = 300) -> str:
     """Extract key discussion points from transcript sentences.
     
     Uses more of the transcript and filters out filler content.
@@ -106,7 +106,7 @@ def preprocess_transcript(transcript_data: dict) -> dict:
     keywords = summary_data.get("keywords") or []
     
     sentences = transcript_data.get("sentences") or []
-    key_discussion = extract_key_discussion(sentences, max_sentences=150)
+    key_discussion = extract_key_discussion(sentences, max_sentences=300)
     
     full_text = " ".join([s.get("text", "") for s in sentences])
     entities = extract_entities_from_text(full_text)
