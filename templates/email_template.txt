@@ -1,18 +1,19 @@
-Subject: Follow-up: {title}
+Subject: Follow-up: {meeting_context}
 
-Hi Team,
+Dear {primary_contact},
 
-Thank you for taking the time to meet today. Here's a quick summary of our discussion:
+Thank you again for your time on {meeting_day}. It was great to meet you, learn more about {their_organization} and determine how we can potentially partner together.
 
-Key Points Discussed:
-{summary_points}
+To quickly summarize our conversation, we discussed:
 
-Action Items:
-{action_items}
+{substantive_summary_paragraph_1}
 
-Next Steps:
-{next_steps}
+{substantive_summary_paragraph_2}
 
-Please let me know if I've missed anything or if you have any questions.
+{substantive_summary_paragraph_3}
 
-Best regards
+As a next step, {next_steps_with_specific_asks}
+
+{closing_ask_or_question}
+
+Warm regards,

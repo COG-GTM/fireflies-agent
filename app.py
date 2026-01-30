@@ -9,7 +9,7 @@ import uvicorn
 from dotenv import load_dotenv
 import asyncio
 from typing import Optional
-from prompts import build_email_prompt
+from prompts import build_email_prompt, preprocess_transcript
 
 load_dotenv()
 
@@ -103,33 +103,28 @@ async def fetch_fireflies_transcript(meeting_id: str) -> Optional[dict]:
         return None
 
 def generate_email_draft(transcript_data: dict) -> str:
-    """Generate a follow-up email draft using Claude"""
+    """Generate a follow-up email draft using Claude.
     
-    title = transcript_data.get("title") or "Meeting"
-    attendees = transcript_data.get("meeting_attendees") or []
-    attendee_names = ", ".join([a.get("displayName") or a.get("name", "Unknown") for a in attendees]) if attendees else "Not specified"
-    
-    summary_data = transcript_data.get("summary") or {}
-    overview = summary_data.get("overview") or ""
-    action_items = summary_data.get("action_items") or []
-    keywords = summary_data.get("keywords") or []
-    
-    sentences = transcript_data.get("sentences") or []
-    key_discussion = "\n".join([f"- {s.get('speaker_name', 'Unknown')}: {s.get('text', '')}" for s in sentences[:20]]) if sentences else "No transcript available"
+    Uses preprocessing to extract substantive content from the transcript
+    and builds a detailed prompt for better email generation.
+    """
+    preprocessed = preprocess_transcript(transcript_data)
     
     prompt = build_email_prompt(
-        title=title,
-        attendee_names=attendee_names,
-        overview=overview,
-        keywords=keywords,
-        action_items=action_items,
-        key_discussion=key_discussion
+        title=preprocessed["title"],
+        attendee_names=preprocessed["attendee_names"],
+        overview=preprocessed["overview"],
+        keywords=preprocessed["keywords"],
+        action_items=preprocessed["action_items"],
+        key_discussion=preprocessed["key_discussion"],
+        entities=preprocessed["entities"],
+        date_string=preprocessed["date_string"],
     )
     
     try:
         message = anthropic_client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=1024,
+            model="claude-sonnet-4-20250514",
+            max_tokens=2048,
             messages=[{"role": "user", "content": prompt}]
         )
         return message.content[0].text
