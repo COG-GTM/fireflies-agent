@@ -1,0 +1,49 @@
+// Fireflies agent architecture. Edit this file, then run ./render.sh.
+digraph fireflies_agent {
+  graph [rankdir=TB, fontname="DejaVu Sans", fontsize=18, labelloc=t, nodesep=0.5, ranksep=0.55, pad=0.3,
+         label="fireflies-agent: Fireflies transcript -> Claude follow-up email draft -> Slack"];
+  node  [shape=box, style="rounded,filled", fontname="DejaVu Sans", fontsize=16, fillcolor=white, color="#444444", margin="0.2,0.1"];
+  edge  [fontname="DejaVu Sans", fontsize=13, color="#555555"];
+
+  fireflies_hook [label="Fireflies.ai\nwebhook\n(\"Transcription completed\")", fillcolor="#fde8d7"];
+  render [label="Render web service\nuvicorn app:app --port $PORT\n(render.yaml)", shape=component, fillcolor="#eeeeee"];
+
+  subgraph cluster_app {
+    label="app.py (FastAPI, single process)"; fontsize=17; style="rounded,dashed"; color="#3b6ea5";
+    routes   [label="POST /webhook/fireflies\nPOST / (alias)\nGET /health", fillcolor="#dce9f7"];
+    process  [label="process_fireflies_webhook()\nfilter eventType, read meetingId", fillcolor="#dce9f7"];
+    fetch    [label="fetch_fireflies_transcript()\nhttpx GraphQL query", fillcolor="#dce9f7"];
+    generate [label="generate_email_draft()", fillcolor="#dce9f7"];
+    channel  [label="get_channel_id_by_name()\nTARGET_CHANNEL_ID or lookup,\ncached in memory", fillcolor="#dce9f7"];
+    post     [label="post_to_slack()\nmeeting metadata + draft", fillcolor="#dce9f7"];
+    {rank=same; generate; channel}
+  }
+
+  subgraph cluster_prompts {
+    label="prompts/ + templates/"; fontsize=17; style="rounded,dashed"; color="#5a8f3c";
+    pre  [label="preprocessing.py\npreprocess_transcript():\ndrop filler, first 300 sentences,\nattendees, summary, tech terms", fillcolor="#e3f1da"];
+    tmpl [label="email_draft.py\nbuild_email_prompt()\n+ templates/email_template.txt", fillcolor="#e3f1da"];
+  }
+
+  ff_api    [label="Fireflies GraphQL API\napi.fireflies.ai/graphql\n(FIREFLIES_API_KEY)", fillcolor="#fde8d7"];
+  anthropic [label="Anthropic Messages API\nclaude-sonnet-4-20250514\n(ANTHROPIC_API_KEY)", fillcolor="#efe0f5"];
+  slack     [label="Slack Web API\nconversations.list, chat.postMessage\n(SLACK_BOT_TOKEN)", fillcolor="#fbf3c9"];
+  human     [label="Team in Slack channel\ncopies and edits the draft,\nsends the email themselves", shape=note, fillcolor="#fbf3c9"];
+
+  fireflies_hook -> routes [label=" JSON {meetingId, eventType}"];
+  render -> routes [style=dashed, arrowhead=none, label=" hosts"];
+  routes -> process;
+  process -> fetch [label=" meetingId"];
+  fetch -> ff_api [label=" transcript(id)"];
+  ff_api -> fetch [style=dashed, label=" title, attendees,\n sentences, summary"];
+  fetch -> pre [label=" transcript dict"];
+  pre -> tmpl [label=" preprocessed fields"];
+  tmpl -> generate [label=" prompt"];
+  generate -> anthropic [label=" messages.create"];
+  anthropic -> generate [style=dashed, label=" draft text"];
+  generate -> post;
+  channel -> post [label=" channel id"];
+  post -> slack;
+  channel -> slack [style=dashed, label=" lookup if no\n TARGET_CHANNEL_ID"];
+  slack -> human;
+}
