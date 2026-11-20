@@ -1,5 +1,7 @@
 # Fireflies Meeting Agent - Migration Plan
 
+> **Status (historical):** this was the plan for the Granola to Fireflies migration and is no longer kept up to date. Steps 3-6 are implemented in `app.py` and `prompts/` even though their boxes are unchecked, and `SLACK_APP_TOKEN` is no longer used (no Socket Mode). See [README.md](README.md) and [docs/architecture.md](docs/architecture.md) for current setup and design.
+
 ## Overview
 
 Migrate from Granola note-taker integration to Fireflies.ai integration. The app will:
