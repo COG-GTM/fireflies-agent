@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request, HTTPException
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
+from slack_sdk.http_retry import RateLimitErrorRetryHandler
 import anthropic
 import httpx
 import os
@@ -16,6 +17,7 @@ load_dotenv()
 app = FastAPI()
 
 slack_client = WebClient(token=os.environ["SLACK_BOT_TOKEN"])
+slack_client.retry_handlers.append(RateLimitErrorRetryHandler(max_retry_count=2))
 anthropic_client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
 FIREFLIES_API_KEY = os.environ["FIREFLIES_API_KEY"]
@@ -199,9 +201,10 @@ async def process_fireflies_webhook(request: Request):
         
         global TARGET_CHANNEL_ID
         if TARGET_CHANNEL_ID is None:
-            TARGET_CHANNEL_ID = await asyncio.to_thread(get_channel_id_by_name, TARGET_CHANNEL_NAME)
-            if TARGET_CHANNEL_ID is None:
+            channel_id = await asyncio.to_thread(get_channel_id_by_name, TARGET_CHANNEL_NAME)
+            if channel_id is None:
                 raise HTTPException(status_code=500, detail=f"Channel '{TARGET_CHANNEL_NAME}' not found")
+            TARGET_CHANNEL_ID = channel_id
         
         await asyncio.to_thread(post_to_slack, email_draft, transcript_data, TARGET_CHANNEL_ID)
         
