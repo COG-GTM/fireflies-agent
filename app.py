@@ -194,16 +194,16 @@ async def process_fireflies_webhook(request: Request):
         
         print(f"[FIREFLIES] Fetched transcript: {transcript_data.get('title')}")
         
-        email_draft = generate_email_draft(transcript_data)
+        email_draft = await asyncio.to_thread(generate_email_draft, transcript_data)
         print(f"[CLAUDE] Generated email draft ({len(email_draft)} chars)")
         
         global TARGET_CHANNEL_ID
         if TARGET_CHANNEL_ID is None:
-            TARGET_CHANNEL_ID = get_channel_id_by_name(TARGET_CHANNEL_NAME)
+            TARGET_CHANNEL_ID = await asyncio.to_thread(get_channel_id_by_name, TARGET_CHANNEL_NAME)
             if TARGET_CHANNEL_ID is None:
                 raise HTTPException(status_code=500, detail=f"Channel '{TARGET_CHANNEL_NAME}' not found")
         
-        post_to_slack(email_draft, transcript_data, TARGET_CHANNEL_ID)
+        await asyncio.to_thread(post_to_slack, email_draft, transcript_data, TARGET_CHANNEL_ID)
         
         return {
             "status": "success",
